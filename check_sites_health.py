@@ -51,10 +51,8 @@ if __name__ == '__main__':
     for url in urls:
         url = url.replace('\n', '')
         if is_server_respond_with_200(url):
-            data_from_url = tldextract.extract(url)
-            domain_name = '.'.join(
-                [data_from_url.domain, data_from_url.suffix]
-            )
+            url_parts = tldextract.extract(url)
+            domain_name = '.'.join([url_parts.domain, url_parts.suffix])
             exp_date = get_domain_expiration_date(domain_name)
             if (exp_date - current_date) > datetime.timedelta(days=30):
                 print('Site {} works correctly without a problem.'.format(url))
