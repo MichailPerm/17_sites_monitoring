@@ -58,8 +58,6 @@ if __name__ == '__main__':
             print('Domain of {} is not registered!'.format(url))
             continue
         if (exp_date - current_date) > datetime.timedelta(days=30):
-            print(
-                'Domain of {} will be available for more than a month.'.format(
-                    url))
+            print('Domain is registered for more than a month.'.format(url))
             continue
-        exit("Site {} will stop it's work less than a month!".format(url))
+        exit("Domain will stop it's work less than a month!".format(url))
