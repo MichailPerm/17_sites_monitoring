@@ -17,48 +17,49 @@ def get_args():
 
 
 def load_urls4check(filepath):
-    with open(filepath, 'r') as f:
-        urls = f.readlines()
-        return urls
+    with open(filepath, 'r') as file:
+        url_lines = file.readlines()
+        return url_lines
 
 
-def is_server_respond_with_200(url):
+def is_server_respond_with_ok(url):
     try:
-        response = requests.get(url, allow_redirects=True)
+        response = requests.get(url)
     except(
         requests.exceptions.MissingSchema,
         requests.exceptions.ConnectionError
     ):
         return None
-    if response.status_code == requests.codes.ok:
-        return True
-    else:
-        return None
+    return response.status_code == requests.codes.ok
 
 
-def get_domain_expiration_date(domain_name):
+def get_domain_expiration_date(url):
+    url_parts = tldextract.extract(url)
+    domain_name = '.'.join([url_parts.domain, url_parts.suffix])
     whois_dict = whois.whois(domain_name)
-    exp_date = whois_dict.expiration_date
-    if isinstance(whois_dict.expiration_date, list):
-        exp_date = whois_dict.expiration_date[0]
-    return exp_date
+    expiration_date = whois_dict.expiration_date
+    if isinstance(expiration_date, list):
+        expiration_date = expiration_date[0]
+    return expiration_date
 
 
 if __name__ == '__main__':
     args = get_args()
     current_date = datetime.datetime.now()
-    urls = load_urls4check(args.filepath)
-    for url in urls:
-        url = url.replace('\n', '')
-        if is_server_respond_with_200(url):
-            url_parts = tldextract.extract(url)
-            domain_name = '.'.join([url_parts.domain, url_parts.suffix])
-            exp_date = get_domain_expiration_date(domain_name)
-            if (exp_date - current_date) > datetime.timedelta(days=30):
-                print('Site {} works correctly without a problem.'.format(url))
-            else:
-                print('Site {} will stop it\'s work less than a month!'.format(
-                        url))
-
+    url_lines = load_urls4check(args.filepath)
+    for url_line in url_lines:
+        url = url_line.replace('\n', '')
+        if is_server_respond_with_ok(url):
+            print('Site {} responding successfully'.format(url))
         else:
             print('Connection not established, or URL {} wrong!'.format(url))
+        exp_date = get_domain_expiration_date(url)
+        if not exp_date:
+            print('Domain of {} is not registered!'.format(url))
+            continue
+        if (exp_date - current_date) > datetime.timedelta(days=30):
+            print(
+                'Domain of {} will be available for more than a month.'.format(
+                    url))
+            continue
+        exit("Site {} will stop it's work less than a month!".format(url))
